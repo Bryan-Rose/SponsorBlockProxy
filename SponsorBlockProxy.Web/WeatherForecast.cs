@@ -1,6 +1,6 @@
 using System;
 
-namespace SponsorBlockProxy
+namespace SponsorBlockProxy.Web
 {
     public class WeatherForecast
     {

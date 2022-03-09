@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace SponsorBlockProxy.Controllers
+namespace SponsorBlockProxy.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]

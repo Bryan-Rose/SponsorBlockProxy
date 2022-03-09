@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace SponsorBlockProxy
+namespace SponsorBlockProxy.Web
 {
     public class Program
     {
