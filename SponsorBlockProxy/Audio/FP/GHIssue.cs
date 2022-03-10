@@ -1,15 +1,16 @@
 ﻿using System.Threading.Tasks;
+
 using SoundFingerprinting;
 using SoundFingerprinting.Builder;
 using SoundFingerprinting.Data;
 using SoundFingerprinting.Emy;
 using SoundFingerprinting.InMemory;
 
-namespace SponsorBlockProxy
+namespace SponsorBlockProxy.Audio.FP
 {
     public class GHIssue
     {
-        public string sampleFile = @"C:\code\SponsorBlockProxy\Samples\GHIssue_Sample.mp3";
+        public string sampleFile = @"C:\code\SponsorBlockProxy\Samples\sample-15s.mp3";
 
         private readonly IModelService modelService = new InMemoryModelService(); // store fingerprints in RAM
         private readonly FFmpegAudioService ffmpegService = new FFmpegAudioService(); // default audio library

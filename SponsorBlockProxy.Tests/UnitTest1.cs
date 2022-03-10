@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using System.Threading.Tasks;
 
+using SponsorBlockProxy.Audio.FP;
+using SponsorBlockProxy.RSS;
 namespace SponsorBlockProxy.Tests
 {
     public class Tests
@@ -8,13 +10,6 @@ namespace SponsorBlockProxy.Tests
         [SetUp]
         public void Setup()
         {
-        }
-
-        [Test]
-        public void RSSTest1()
-        {
-            var r = new RSSTester();
-            r.Run();
         }
 
         [Test]

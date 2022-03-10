@@ -12,6 +12,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
+using SponsorBlockProxy.RSS;
+
 namespace SponsorBlockProxy.Web
 {
     public class Startup
@@ -26,12 +28,14 @@ namespace SponsorBlockProxy.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<RSSProxyService>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "test", Version = "v1" });
             });
+            services.Configure<AppSeettingsConfig>(Configuration.GetSection("AppSettings"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,6 +58,7 @@ namespace SponsorBlockProxy.Web
             {
                 endpoints.MapControllers();
             });
+
         }
     }
 }

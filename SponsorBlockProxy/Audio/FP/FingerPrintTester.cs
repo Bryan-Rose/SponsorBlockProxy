@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using SoundFingerprinting;
 using SoundFingerprinting.Audio;
 using SoundFingerprinting.Builder;
@@ -11,7 +12,7 @@ using SoundFingerprinting.Data;
 using SoundFingerprinting.Emy;
 using SoundFingerprinting.InMemory;
 
-namespace SponsorBlockProxy
+namespace SponsorBlockProxy.Audio.FP
 {
     public class FingerPrintTester
     {
