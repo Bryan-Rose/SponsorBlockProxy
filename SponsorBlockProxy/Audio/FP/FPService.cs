@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using SoundFingerprinting;
 using SoundFingerprinting.Audio;
+using SoundFingerprinting.Builder;
+using SoundFingerprinting.Data;
 using SoundFingerprinting.Emy;
 using SoundFingerprinting.InMemory;
-using SoundFingerprinting.Data;
-using SoundFingerprinting.Builder;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using SoundFingerprinting.Strides;
 
 namespace SponsorBlockProxy.Audio.FP
@@ -57,19 +57,39 @@ namespace SponsorBlockProxy.Audio.FP
             this.storageService.Insert(track, avHashes);
         }
 
-        public async Task Query(string file)
+        public async Task<ResultModel> Query(string file)
         {
             var result = await QueryCommandBuilder.Instance
                 .BuildQueryCommand()
                 .From(file)
-                //.WithQueryConfig(x =>
-                //{
-                //    x.Audio.Stride = new IncrementalStaticStride(128);
-                //    return x;
-                //})
                 .UsingServices(this.storageService, this.audioService)
                 .Query();
 
+            var audioResult = result.Audio;
+
+            if (!audioResult.ContainsMatches)
+            {
+                throw new Exception();
+            }
+
+            if (audioResult.ResultEntries.Count() != 2)
+            {
+                throw new Exception();
+            }
+
+
+            return new ResultModel
+            {
+                FirstMatch = TimeSpan.FromSeconds(audioResult.ResultEntries.Min(x => x.QueryMatchStartsAt)),
+                SecondMatch = TimeSpan.FromSeconds(audioResult.ResultEntries.Max(x => x.QueryMatchStartsAt)),
+            };
+        }
+
+
+        public class ResultModel
+        {
+            public TimeSpan FirstMatch { get; set; }
+            public TimeSpan SecondMatch { get; set; }
         }
     }
 }

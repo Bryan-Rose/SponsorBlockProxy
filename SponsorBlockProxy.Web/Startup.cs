@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 using SponsorBlockProxy.Audio.FP;
+using SponsorBlockProxy.Audio.Splice;
 using SponsorBlockProxy.RSS;
 
 namespace SponsorBlockProxy.Web
@@ -31,6 +25,7 @@ namespace SponsorBlockProxy.Web
         {
             services.AddTransient<RSSProxyService>();
             services.AddSingleton<FPService>();
+            services.AddSingleton<SplicerService>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
