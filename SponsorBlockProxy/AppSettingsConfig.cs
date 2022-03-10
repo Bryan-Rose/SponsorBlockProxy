@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SponsorBlockProxy
 {
-    public class AppSeettingsConfig
+    public class AppSettingsConfig
     {
         public string BaseUrl { get; set; }
         public string SamplesDirectory { get; set; }

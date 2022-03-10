@@ -12,24 +12,24 @@ using SoundFingerprinting.Data;
 using SoundFingerprinting.Builder;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SoundFingerprinting.Strides;
 
 namespace SponsorBlockProxy.Audio.FP
 {
     public class FPService
     {
         public FPService(ILogger<FPService> logger,
-            IOptions<AppSeettingsConfig> config,
-            IModelService storageService,
-            SoundFingerprintingAudioService fingerPrintService)
+            ILoggerFactory logFactory,
+            IOptions<AppSettingsConfig> config)
         {
             this.logger = logger;
             this.config = config;
-            this.storageService = storageService;
-            this.audioService = fingerPrintService;
+            this.storageService = new InMemoryModelService();
+            this.audioService = new FFmpegAudioService();
         }
 
         private readonly ILogger<FPService> logger;
-        private readonly IOptions<AppSeettingsConfig> config;
+        private readonly IOptions<AppSettingsConfig> config;
         private readonly IModelService storageService;
         private readonly IAudioService audioService;
 
@@ -47,10 +47,29 @@ namespace SponsorBlockProxy.Audio.FP
             var avHashes = await FingerprintCommandBuilder.Instance
                                         .BuildFingerprintCommand()
                                         .From(file, MediaType.Audio)
-                                        .UsingServices(this.audioService)
+                                        .WithFingerprintConfig(x =>
+                                        {
+                                            x.Audio.Stride = new IncrementalStaticStride(128);
+                                            return x;
+                                        }).UsingServices(this.audioService)
                                         .Hash();
 
             this.storageService.Insert(track, avHashes);
+        }
+
+        public async Task Query(string file)
+        {
+            var result = await QueryCommandBuilder.Instance
+                .BuildQueryCommand()
+                .From(file)
+                //.WithQueryConfig(x =>
+                //{
+                //    x.Audio.Stride = new IncrementalStaticStride(128);
+                //    return x;
+                //})
+                .UsingServices(this.storageService, this.audioService)
+                .Query();
+
         }
     }
 }

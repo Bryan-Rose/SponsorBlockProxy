@@ -15,9 +15,9 @@ namespace SponsorBlockProxy.RSS
     public class RSSProxyService
     {
         private readonly ILogger<RSSProxyService> logger;
-        private readonly IOptions<AppSeettingsConfig> config;
+        private readonly IOptions<AppSettingsConfig> config;
 
-        public RSSProxyService(ILogger<RSSProxyService> logger, IOptions<AppSeettingsConfig> config)
+        public RSSProxyService(ILogger<RSSProxyService> logger, IOptions<AppSettingsConfig> config)
         {
             this.logger = logger;
             this.config = config;
