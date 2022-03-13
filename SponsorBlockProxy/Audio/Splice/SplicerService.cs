@@ -2,6 +2,8 @@
 using System.IO;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Options;
+
 using FFmpegEx = Xabe.FFmpeg.FFmpeg;
 
 namespace SponsorBlockProxy.Audio.Splice
@@ -10,10 +12,18 @@ namespace SponsorBlockProxy.Audio.Splice
     {
         public SplicerService()
         {
-            this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockPRoxy");
+            this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockProxy");
             Directory.CreateDirectory(this.WorkDir);
 
-            FFmpegEx.SetExecutablesPath(@"FFmpeg\bin\x64");
+            if (AppSettingsConfig.OperatingSystem.IsWindows)
+            {
+                FFmpegEx.SetExecutablesPath(@"FFmpeg\bin\x64");
+            }
+            else if (AppSettingsConfig.OperatingSystem.IsLinux)
+            {
+
+                FFmpegEx.SetExecutablesPath("/usr/lib/x86_64-linux-gnu/");
+            }
         }
 
         private readonly string WorkDir;
@@ -41,6 +51,7 @@ namespace SponsorBlockProxy.Audio.Splice
             var concat = await Extensions.ConcatenateAudio(fullOutput, section1Output, section2Output);
             concat.UseMultiThread(true);
             await concat.Start();
+
 
             if (deleteInputfile) File.Delete(inputFile);
             File.Delete(section1Output);

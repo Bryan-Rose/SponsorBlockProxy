@@ -70,7 +70,7 @@ namespace SponsorBlockProxy.RSS
             var feed = SyndicationFeed.Load(reader);
 
             var episode = feed.Items.FirstOrDefault(x => x.Id == episodeId);
-            var link = episode.Links.FirstOrDefault(x => x.RelationshipType == "enclosure").Uri;
+            var link = episode.Links.FirstOrDefault(x => x.RelationshipType == "enclosure" && x.MediaType == "audio/mp3").Uri;
 
             var client = HttpClientFactory.Create();
             var stream = await client.GetStreamAsync(link);

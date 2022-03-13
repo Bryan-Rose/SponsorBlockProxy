@@ -11,12 +11,13 @@ namespace SponsorBlockProxy.RSS
 {
     public class RSSFeedWrapper
     {
-        private readonly SyndicationFeed feed;
-
         public RSSFeedWrapper(SyndicationFeed feed)
         {
             this.feed = feed;
         }
+
+        private readonly SyndicationFeed feed;
+
 
         public void Write(Stream stream)
         {
