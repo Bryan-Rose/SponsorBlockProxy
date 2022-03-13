@@ -15,7 +15,6 @@ namespace SponsorBlockProxy.Tests
         }
 
 
-        [Test]
         public async Task Query()
         {
             var s = new FPService(null, null, null);
@@ -24,7 +23,6 @@ namespace SponsorBlockProxy.Tests
         }
 
 
-        [Test]
         public async Task Splice()
         {
             string podcast = @"C:\Users\bryan\Downloads\d69ad425-b889-4498-833a-ae43a802b0b8.mp3";
