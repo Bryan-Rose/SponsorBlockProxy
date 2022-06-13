@@ -1,9 +1,10 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Extensions.Options;
 using SponsorBlockProxy.Audio.FP;
 using SponsorBlockProxy.Audio.Splice;
 using SponsorBlockProxy.RSS;
@@ -15,17 +16,21 @@ namespace SponsorBlockProxy.Web.Controllers
     public class RSSController : ControllerBase
     {
         public RSSController(ILogger<RSSController> logger,
+            IOptionsSnapshot<AppSettingsConfig> config,
             RSSProxyService proxyService,
             FPService fpService,
             SplicerService spicerService)
         {
             this.logger = logger;
+            this.config = config;
             this.proxyService = proxyService;
             this.fpService = fpService;
             this.splicerService = spicerService;
+
         }
 
         private readonly ILogger<RSSController> logger;
+        private readonly IOptionsSnapshot<AppSettingsConfig> config;
         private readonly RSSProxyService proxyService;
         private readonly FPService fpService;
         private readonly SplicerService splicerService;
@@ -45,21 +50,23 @@ namespace SponsorBlockProxy.Web.Controllers
         [HttpGet("download/{podcast}/{*episode}")]
         public async Task<IActionResult> Download()
         {
-            string podcast = this.RouteData.Values["podcast"].ToString().Trim();
+            string podcastName = this.RouteData.Values["podcast"].ToString().Trim();
             string episode = this.RouteData.Values["episode"].ToString().Trim();
 
-            var (fileName, stream) = await this.proxyService.Download(podcast, episode);
+            var podcast = this.config.Value.Podcasts.First(x => x.Name.Equals(podcastName, System.StringComparison.OrdinalIgnoreCase));
+
+            var (fileName, stream) = await this.proxyService.Download(podcastName, episode);
             string file = Path.GetTempFileName() + ".mp3";
             using (var fs = new FileStream(file, FileMode.CreateNew))
             {
                 await stream.CopyToAsync(fs);
             }
 
-            var queryResult = await this.fpService.Query(file);
+            var queryResult = await this.fpService.Query(file, podcast);
             string finalFile = await this.splicerService.Cut(file, new SplicerService.CutOut
             {
-                Start = queryResult.FirstMatch,
-                Stop = queryResult.SecondMatch,
+                Start = queryResult.Start,
+                Stop = queryResult.End,
             });
 
 

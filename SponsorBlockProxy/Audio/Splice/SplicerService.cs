@@ -48,7 +48,7 @@ namespace SponsorBlockProxy.Audio.Splice
 
             string fullOutput = GetUniqueFile(this.WorkDir);
 
-            var concat = await Extensions.ConcatenateAudio(fullOutput, section1Output, section2Output);
+            var concat = Extensions.ConcatenateAudio(fullOutput, section1Output, section2Output);
             concat.UseMultiThread(true);
             await concat.Start();
 

@@ -9,6 +9,7 @@ using System.Xml;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.IO;
+using SponsorBlockProxy.Models;
 
 namespace SponsorBlockProxy.RSS
 {
@@ -17,18 +18,14 @@ namespace SponsorBlockProxy.RSS
         private readonly ILogger<RSSProxyService> logger;
         private readonly IOptions<AppSettingsConfig> config;
 
-        public RSSProxyService(ILogger<RSSProxyService> logger, IOptions<AppSettingsConfig> config)
+        public RSSProxyService(ILogger<RSSProxyService> logger, IOptionsSnapshot<AppSettingsConfig> config)
         {
             this.logger = logger;
             this.config = config;
+            this.Podcasts = config.Value.Podcasts.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
         }
 
-        public Dictionary<string, PodcastInfo> Podcasts = new Dictionary<string, PodcastInfo>(StringComparer.OrdinalIgnoreCase) {
-            { "LinuxUnplugged", new PodcastInfo { Name = "Linux Unplugged", RSSUrl = new Uri(@"https://feeds.fireside.fm/linuxunplugged/rss") } },
-            { "JupiterExtras", new PodcastInfo { Name = "Jupiter EXTRAS", RSSUrl = new Uri(@"https://feeds.fireside.fm/extras/rss") } },
-            { "LinuxActionNews", new PodcastInfo { Name = "Linux Action News", RSSUrl = new Uri(@"https://feeds.fireside.fm/linuxactionnews/rss") } },
-            { "SelfHosted", new PodcastInfo { Name = "SelfHosted", RSSUrl = new Uri(@"https://feeds.fireside.fm/selfhosted/rss") } },
-        };
+        public Dictionary<string, PodcastInfo> Podcasts { get; set; }
 
         public RSSFeedWrapper GetFeed(string podcast)
         {
