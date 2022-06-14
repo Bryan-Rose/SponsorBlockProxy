@@ -24,7 +24,7 @@ namespace SponsorBlockProxy.Audio.FP
     {
         public FPService(ILogger<FPService> logger,
             ILoggerFactory logFactory,
-            IOptionsSnapshot<AppSettingsConfig> config)
+            IOptionsMonitor<AppSettingsConfig> config)
         {
             this.logger = logger;
             this.config = config;
@@ -33,15 +33,15 @@ namespace SponsorBlockProxy.Audio.FP
         }
 
         private readonly ILogger<FPService> logger;
-        private readonly IOptionsSnapshot<AppSettingsConfig> config;
+        private readonly IOptionsMonitor<AppSettingsConfig> config;
         private readonly IModelService storageService;
         private readonly IAudioService audioService;
 
         public async Task StartupRegisterAll(string path = null)
         {
-            path ??= this.config.Value.SamplesDirectory;
+            path ??= this.config.CurrentValue.SamplesDirectory;
 
-            foreach (var p in this.config.Value.Podcasts)
+            foreach (var p in this.config.CurrentValue.Podcasts)
             {
                 foreach (var s in p.SkipPairs)
                 {
@@ -54,6 +54,8 @@ namespace SponsorBlockProxy.Audio.FP
         public async Task RegisterSample(string podcast, string skipPairId, StartEndEnum startEnd, string file)
         {
             string fileName = Path.GetFileName(file);
+            this.logger.LogInformation($"Registering sample for {podcast} - {file}");
+
             var track = new TrackInfo($"{podcast}_{fileName}", fileName, "Sample",
                 metaFields: new Dictionary<string, string> {
                     { "podcast", podcast },

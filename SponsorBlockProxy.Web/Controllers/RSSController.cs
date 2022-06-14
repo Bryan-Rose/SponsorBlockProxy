@@ -63,11 +63,8 @@ namespace SponsorBlockProxy.Web.Controllers
             }
 
             var queryResult = await this.fpService.Query(file, podcast);
-            string finalFile = await this.splicerService.Cut(file, new SplicerService.CutOut
-            {
-                Start = queryResult.Start,
-                Stop = queryResult.End,
-            });
+            this.logger.LogInformation($"Found cuts: {string.Join(",", queryResult.Select(x => $"{x.Start}-{x.End}"))}");
+            string finalFile = await this.splicerService.Cut(file, queryResult.Select(x => new SplicerService.CutOut(x.Start, x.End)).ToArray());
 
 
             return this.PhysicalFile(finalFile, "application/octet-stream", fileName);

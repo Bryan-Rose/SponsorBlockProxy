@@ -29,6 +29,7 @@ namespace SponsorBlockProxy.RSS
 
         public RSSFeedWrapper GetFeed(string podcast)
         {
+            this.logger.LogInformation($"Getting feed for {podcast}");
             var info = this.Podcasts.GetValueOrDefault(podcast);
             if (info is null)
             {
@@ -45,14 +46,13 @@ namespace SponsorBlockProxy.RSS
                 {
                     if (link.RelationshipType == "enclosure" && link.MediaType == "audio/mp3")
                     {
-                        link.Uri = new Uri(new Uri(this.config.Value.BaseUrl), $"download/{podcast}/{guid}");
+                        link.Uri = new Uri(new Uri(this.config.Value.BaseUrl), $"RSS/download/{podcast}/{guid}");
                     }
                 }
             }
 
             var wrapper = new RSSFeedWrapper(feed);
             return wrapper;
-
         }
 
         public async Task<(string filename, Stream stream)> Download(string podcast, string episodeId)

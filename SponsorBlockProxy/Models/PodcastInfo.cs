@@ -10,7 +10,7 @@ namespace SponsorBlockProxy.Models
     {
         public string Name { get; set; }
         public Uri RSSUrl { get; set; }
-        public SkipPair[] SkipPairs { get; set; } = new SkipPair[0];
+        public List<SkipPair> SkipPairs { get; set; } = new List<SkipPair>();
 
         public class SkipPair
         {
