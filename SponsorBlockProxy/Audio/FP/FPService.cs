@@ -24,7 +24,7 @@ namespace SponsorBlockProxy.Audio.FP
     {
         public FPService(ILogger<FPService> logger,
             ILoggerFactory logFactory,
-            IOptionsMonitor<AppSettingsConfig> config)
+            AppSettingsConfig config)
         {
             this.logger = logger;
             this.config = config;
@@ -33,16 +33,19 @@ namespace SponsorBlockProxy.Audio.FP
         }
 
         private readonly ILogger<FPService> logger;
-        private readonly IOptionsMonitor<AppSettingsConfig> config;
+        private readonly AppSettingsConfig config;
         private readonly IModelService storageService;
         private readonly IAudioService audioService;
 
         public async Task StartupRegisterAll(string path = null)
         {
-            path ??= this.config.CurrentValue.SamplesDirectory;
+            path ??= this.config.SamplesDirectory;
+            this.logger.LogInformation($"Registering samples at {path}");
 
-            foreach (var p in this.config.CurrentValue.Podcasts)
+            foreach (var p in this.config.Podcasts)
             {
+                this.logger.LogInformation($"Registering {p.SkipPairs.Length} samples for {p.Name}");
+
                 foreach (var s in p.SkipPairs)
                 {
                     await this.RegisterSample(p.Name, s.Id, StartEndEnum.Start, Path.Combine(path, s.Start_Filename));
@@ -64,14 +67,14 @@ namespace SponsorBlockProxy.Audio.FP
                  });
 
             var avHashes = await FingerprintCommandBuilder.Instance
-                                        .BuildFingerprintCommand()
-                                        .From(file, MediaType.Audio)
-                                        .WithFingerprintConfig(x =>
-                                        {
-                                            x.Audio.Stride = new IncrementalStaticStride(128);
-                                            return x;
-                                        }).UsingServices(this.audioService)
-                                        .Hash();
+                .BuildFingerprintCommand()
+                .From(file, MediaType.Audio)
+                .WithFingerprintConfig(x =>
+                {
+                    x.Audio.Stride = new IncrementalStaticStride(128);
+                    return x;
+                }).UsingServices(this.audioService)
+                .Hash();
 
             this.storageService.Insert(track, avHashes);
         }
@@ -81,6 +84,11 @@ namespace SponsorBlockProxy.Audio.FP
             var result = await QueryCommandBuilder.Instance
                 .BuildQueryCommand()
                 .From(file)
+                 .WithQueryConfig(config =>
+                {
+                    config.Audio.AllowMultipleMatchesOfTheSameTrackInQuery = true;
+                    return config;
+                })
                 .UsingServices(this.storageService, this.audioService)
                 .Query();
 
@@ -88,18 +96,28 @@ namespace SponsorBlockProxy.Audio.FP
 
             if (!audioResult.ContainsMatches)
             {
-                throw new Exception();
+                throw new Exception("No matches found!");
             }
 
-            var working = new Queue<ResultEntry>();
-            audioResult.ResultEntries.Where(x => x.GetPodcast() == podcast.Name)
-                .ToList()
-                .ForEach(x => working.Enqueue(x));
-            var pairs = new List<ResultModel>();
-            ResultEntry GetEnd(Queue<ResultEntry> q, ResultEntry start, PodcastInfo.SkipPair skip)
+            this.logger.LogInformation($"Raw query - found {audioResult.ResultEntries.Count()}");
+
+            var working = audioResult.ResultEntries.Where(x => x.GetPodcast() == podcast.Name)
+                .OrderBy(x => x.QueryMatchStartsAt)
+                .ToList();
+
+            this.logger.LogInformation($"Filtered to podcast - found {audioResult.ResultEntries.Count()}");
+            foreach (var r in working)
             {
-                while (q.TryDequeue(out var r))
+                this.logger.LogInformation($"{r.Track.Title} SkipPairId:{r.GetSkipPair()} StartEnd:{r.GetStartEnd()} StartTime:{(int)r.QueryMatchStartsAt}");
+            }
+
+            var pairs = new List<ResultModel>();
+            (ResultEntry, int) GetEnd(List<ResultEntry> q, int startIndex, ResultEntry start, SkipPair skip)
+            {
+                for (int i = startIndex; i < q.Count; i++)
                 {
+                    var r = q[i];
+
                     var endSkip = r.GetSkipPair();
                     if (endSkip != skip.Id) continue;
 
@@ -108,22 +126,24 @@ namespace SponsorBlockProxy.Audio.FP
                     if (r.QueryMatchStartsAt - start.QueryMatchStartsAt < skip.MinTimeSeconds) continue;
                     if (r.QueryMatchStartsAt - start.QueryMatchStartsAt > skip.MaxTimeSeconds) break;
 
-                    return r;
+                    return (r, i);
                 }
-                return null;
+
+                return (null, -1);
             }
 
             ResultEntry start;
-            while (working.Count > 0)
+            for (int currentIndex = 0; currentIndex < working.Count; currentIndex++)
             {
-                start = working.Dequeue();
+                start = working[currentIndex];
                 if (start.GetStartEnd() != StartEndEnum.Start) continue;
 
                 var startPair = podcast.SkipPairs.First(x => x.Id == start.GetSkipPair());
-                var end = GetEnd(working, start, startPair);
+                var (end, foundEndIndex) = GetEnd(working, currentIndex + 1, start, startPair);
                 if (end == null) continue;
 
                 pairs.Add(new ResultModel(start, end));
+                currentIndex = foundEndIndex;
             }
 
             return pairs;

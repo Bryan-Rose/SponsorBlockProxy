@@ -57,8 +57,8 @@ namespace SponsorBlockProxy.Web.Controllers
             var podcast = this.config.Podcasts.First(x => x.Name.Equals(podcastName, System.StringComparison.OrdinalIgnoreCase));
 
             var (fileName, stream) = await this.proxyService.Download(podcastName, episode);
-            string file = Path.GetTempFileName() + ".mp3";
-            using (var fs = new FileStream(file, FileMode.CreateNew))
+            string file = Path.GetTempFileName();
+            using (var fs = new FileStream(file, FileMode.OpenOrCreate))
             {
                 await stream.CopyToAsync(fs);
             }
