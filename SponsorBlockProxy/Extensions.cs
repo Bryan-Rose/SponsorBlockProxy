@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SoundFingerprinting.Query;
@@ -26,6 +27,14 @@ namespace SponsorBlockProxy
             return Enum.Parse<StartEndEnum>(r.Track.MetaFields["startEnd"]);
         }
 
+
+        public static void ForEach<T>(this IEnumerable<T> e, Action<T> act)
+        {
+            foreach (var t in e)
+            {
+                act(t);
+            }
+        }
 
 
         public static IConversion ConcatenateAudio(string output, params string[] inputAudio)

@@ -16,13 +16,13 @@ namespace SponsorBlockProxy.RSS
     public class RSSProxyService
     {
         private readonly ILogger<RSSProxyService> logger;
-        private readonly IOptions<AppSettingsConfig> config;
+        private readonly AppSettingsConfig config;
 
-        public RSSProxyService(ILogger<RSSProxyService> logger, IOptionsSnapshot<AppSettingsConfig> config)
+        public RSSProxyService(ILogger<RSSProxyService> logger, AppSettingsConfig config)
         {
             this.logger = logger;
             this.config = config;
-            this.Podcasts = config.Value.Podcasts.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
+            this.Podcasts = config.Podcasts.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
         }
 
         public Dictionary<string, PodcastInfo> Podcasts { get; set; }
@@ -46,7 +46,7 @@ namespace SponsorBlockProxy.RSS
                 {
                     if (link.RelationshipType == "enclosure" && link.MediaType == "audio/mp3")
                     {
-                        link.Uri = new Uri(new Uri(this.config.Value.BaseUrl), $"RSS/download/{podcast}/{guid}");
+                        link.Uri = new Uri(new Uri(this.config.BaseUrl), $"RSS/download/{podcast}/{guid}");
                     }
                 }
             }

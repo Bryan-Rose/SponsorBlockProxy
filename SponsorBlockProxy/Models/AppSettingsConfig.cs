@@ -2,13 +2,13 @@
 using SponsorBlockProxy.Models;
 using SponsorBlockProxy.RSS;
 
-namespace SponsorBlockProxy
+namespace SponsorBlockProxy.Models
 {
     public class AppSettingsConfig
     {
         public string BaseUrl { get; set; }
         public string SamplesDirectory { get; set; }
-        public PodcastInfo[] Podcasts { get; set; }
+        public PodcastInfo[] Podcasts { get; set; } = new PodcastInfo[0];
 
 
 

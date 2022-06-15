@@ -22,7 +22,6 @@ namespace SponsorBlockProxy.Web
             {
                 var fpService = scope.ServiceProvider.GetRequiredService<FPService>();
 
-
                 await fpService.StartupRegisterAll();
             }
 
