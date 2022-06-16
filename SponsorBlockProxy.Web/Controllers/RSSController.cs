@@ -16,7 +16,7 @@ namespace SponsorBlockProxy.Web.Controllers
     [Route("[controller]")]
     public class RSSController : ControllerBase
     {
-        public RSSController(ILogger<RSSController> logger,
+        public RSSController(Loggy<RSSController> logger,
             AppSettingsConfig config,
             RSSProxyService proxyService,
             FPService fpService,
@@ -30,7 +30,7 @@ namespace SponsorBlockProxy.Web.Controllers
 
         }
 
-        private readonly ILogger<RSSController> logger;
+        private readonly Loggy<RSSController> logger;
         private readonly AppSettingsConfig config;
         private readonly RSSProxyService proxyService;
         private readonly FPService fpService;
