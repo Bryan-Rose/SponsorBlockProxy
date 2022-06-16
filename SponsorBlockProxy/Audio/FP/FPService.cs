@@ -22,7 +22,7 @@ namespace SponsorBlockProxy.Audio.FP
 {
     public class FPService
     {
-        public FPService(ILogger<FPService> logger,
+        public FPService(Loggy<FPService> logger,
             AppSettingsConfig config)
         {
             this.logger = logger;
@@ -31,7 +31,7 @@ namespace SponsorBlockProxy.Audio.FP
             this.audioService = new FFmpegAudioService();
         }
 
-        private readonly ILogger<FPService> logger;
+        private readonly Loggy<FPService> logger;
         private readonly AppSettingsConfig config;
         private readonly IModelService storageService;
         private readonly IAudioService audioService;
@@ -70,7 +70,7 @@ namespace SponsorBlockProxy.Audio.FP
                 .From(file, MediaType.Audio)
                 .WithFingerprintConfig(x =>
                 {
-                    x.Audio.Stride = new IncrementalStaticStride(128);
+                    x.Audio.Stride = new IncrementalRandomStride(64, 256);
                     return x;
                 }).UsingServices(this.audioService)
                 .Hash();
@@ -83,9 +83,10 @@ namespace SponsorBlockProxy.Audio.FP
             var result = await QueryCommandBuilder.Instance
                 .BuildQueryCommand()
                 .From(file)
-                 .WithQueryConfig(config =>
+                .WithQueryConfig(config =>
                 {
                     config.Audio.AllowMultipleMatchesOfTheSameTrackInQuery = true;
+                    config.Audio.Stride = new IncrementalRandomStride(512, 1024);
                     return config;
                 })
                 .UsingServices(this.storageService, this.audioService)

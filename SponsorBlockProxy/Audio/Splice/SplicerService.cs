@@ -12,10 +12,10 @@ namespace SponsorBlockProxy.Audio.Splice
 {
     public class SplicerService : IDisposable
     {
-        public SplicerService(ILogger<SplicerService> logger,
+        public SplicerService(Loggy<SplicerService> logger,
             AppSettingsConfig config)
         {
-            this.logger = logger;
+            this.Logger = logger;
             this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockProxy");
             Directory.CreateDirectory(this.WorkDir);
 
@@ -33,7 +33,7 @@ namespace SponsorBlockProxy.Audio.Splice
             // }
         }
 
-        public ILogger<SplicerService> Logger { get; }
+        public Loggy<SplicerService> Logger { get; }
         private readonly string WorkDir;
 
         public async Task<string> Cut(string inputFile, CutOut[] cuts, bool deleteInputfile = true)
@@ -50,24 +50,29 @@ namespace SponsorBlockProxy.Audio.Splice
             keeps.Add(new Keep { Start = start, Stop = mediaInfo.Duration });
 
 
+            var p1 = new PerfLogger(this.Logger, "Splits");
             foreach (var keep in keeps)
             {
                 string sectionOutput = GetUniqueFile(this.WorkDir);
                 var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, sectionOutput, keep.Start, keep.Stop);
                 splitJob.UseMultiThread(true);
-                this.logger.LogInformation($"Starting split {}");
+                this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
                 var splitTask = splitJob.Start();
                 keep.File = sectionOutput;
                 keep.CutTask = splitTask;
             }
 
             await Task.WhenAll(keeps.Select(x => x.CutTask));
+            p1.Dispose();
+
 
             string fullOutput = GetUniqueFile(this.WorkDir);
 
             var concat = Extensions.ConcatenateAudio(fullOutput, keeps.Select(x => x.File).ToArray());
             concat.UseMultiThread(true);
+            var p2 = new PerfLogger(this.Logger, "Concate");
             await concat.Start();
+            p2.Dispose();
 
 
             if (deleteInputfile) File.Delete(inputFile);

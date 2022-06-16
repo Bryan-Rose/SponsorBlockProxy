@@ -27,6 +27,7 @@ namespace SponsorBlockProxy.Web
             services.AddTransient<RSSProxyService>();
             services.AddSingleton<FPService>();
             services.AddSingleton<SplicerService>();
+            services.AddTransient(typeof(Loggy<>));
             
             var section = Configuration.GetSection("AppSettings");
             var config = section.Get<AppSettingsConfig>();
