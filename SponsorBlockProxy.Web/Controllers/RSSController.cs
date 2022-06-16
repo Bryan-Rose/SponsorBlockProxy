@@ -51,6 +51,8 @@ namespace SponsorBlockProxy.Web.Controllers
         [HttpGet("download/{podcast}/{*episode}")]
         public async Task<IActionResult> Download()
         {
+            using var pRequest = new PerfLogger(this.logger, "WholeRequest");
+
             string podcastName = this.RouteData.Values["podcast"].ToString().Trim();
             string episode = this.RouteData.Values["episode"].ToString().Trim();
 

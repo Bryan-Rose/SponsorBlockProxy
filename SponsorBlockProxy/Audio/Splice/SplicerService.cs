@@ -12,8 +12,10 @@ namespace SponsorBlockProxy.Audio.Splice
 {
     public class SplicerService : IDisposable
     {
-        public SplicerService(AppSettingsConfig config)
+        public SplicerService(ILogger<SplicerService> logger,
+            AppSettingsConfig config)
         {
+            this.logger = logger;
             this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockProxy");
             Directory.CreateDirectory(this.WorkDir);
 
@@ -31,6 +33,7 @@ namespace SponsorBlockProxy.Audio.Splice
             // }
         }
 
+        public ILogger<SplicerService> Logger { get; }
         private readonly string WorkDir;
 
         public async Task<string> Cut(string inputFile, CutOut[] cuts, bool deleteInputfile = true)
@@ -52,6 +55,7 @@ namespace SponsorBlockProxy.Audio.Splice
                 string sectionOutput = GetUniqueFile(this.WorkDir);
                 var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, sectionOutput, keep.Start, keep.Stop);
                 splitJob.UseMultiThread(true);
+                this.logger.LogInformation($"Starting split {}");
                 var splitTask = splitJob.Start();
                 keep.File = sectionOutput;
                 keep.CutTask = splitTask;
