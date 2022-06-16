@@ -12,20 +12,23 @@ namespace SponsorBlockProxy.Audio.Splice
 {
     public class SplicerService : IDisposable
     {
-        public SplicerService()
+        public SplicerService(AppSettingsConfig config)
         {
             this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockProxy");
             Directory.CreateDirectory(this.WorkDir);
 
-            if (AppSettingsConfig.OperatingSystem.IsWindows)
-            {
-                FFmpegEx.SetExecutablesPath(@"FFmpeg\bin\x64");
-            }
-            else if (AppSettingsConfig.OperatingSystem.IsLinux)
-            {
 
-                FFmpegEx.SetExecutablesPath("/usr/lib/x86_64-linux-gnu/");
-            }
+            FFmpegEx.SetExecutablesPath(config.ffmpegDirectrory);
+
+            // if (AppSettingsConfig.OperatingSystem.IsWindows)
+            // {
+            //     FFmpegEx.SetExecutablesPath(@"FFmpeg\bin\x64");
+            // }
+            // else if (AppSettingsConfig.OperatingSystem.IsLinux)
+            // {
+
+            //     FFmpegEx.SetExecutablesPath("/usr/lib/x86_64-linux-gnu/");
+            // }
         }
 
         private readonly string WorkDir;

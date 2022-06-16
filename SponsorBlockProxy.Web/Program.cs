@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,16 @@ namespace SponsorBlockProxy.Web
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    if (hostingContext.HostingEnvironment.IsProduction())
+                    {
+                        var path = System.Environment.GetEnvironmentVariable("SBP_CONFIG_DIR");
+                        
+                        config.AddJsonFile(Path.Combine(path, "appsettings.json"), optional: false, reloadOnChange: true);
+                        config.AddJsonFile(Path.Combine(path, "appsettings.Production.json"), optional: true, reloadOnChange: true);
+                    }
+                }).ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 });

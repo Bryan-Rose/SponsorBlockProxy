@@ -54,6 +54,7 @@ namespace SponsorBlockProxy.Web.Controllers
             string podcastName = this.RouteData.Values["podcast"].ToString().Trim();
             string episode = this.RouteData.Values["episode"].ToString().Trim();
 
+            this.logger.LogInformation($"Downloading {podcastName} - {episode}");
             var podcast = this.config.Podcasts.First(x => x.Name.Equals(podcastName, System.StringComparison.OrdinalIgnoreCase));
 
             var (fileName, stream) = await this.proxyService.Download(podcastName, episode);

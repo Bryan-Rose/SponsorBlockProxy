@@ -8,6 +8,7 @@ namespace SponsorBlockProxy.Models
     {
         public string BaseUrl { get; set; }
         public string SamplesDirectory { get; set; }
+        public string ffmpegDirectrory{get;set;}
         public PodcastInfo[] Podcasts { get; set; } = new PodcastInfo[0];
 
 
