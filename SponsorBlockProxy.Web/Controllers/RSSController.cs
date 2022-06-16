@@ -57,17 +57,26 @@ namespace SponsorBlockProxy.Web.Controllers
             this.logger.LogInformation($"Downloading {podcastName} - {episode}");
             var podcast = this.config.Podcasts.First(x => x.Name.Equals(podcastName, System.StringComparison.OrdinalIgnoreCase));
 
+            var p1 = new PerfLogger(logger, "Download");
             var (fileName, stream) = await this.proxyService.Download(podcastName, episode);
             string file = Path.GetTempFileName();
             using (var fs = new FileStream(file, FileMode.OpenOrCreate))
             {
                 await stream.CopyToAsync(fs);
             }
+            p1.Dispose();
 
+
+            this.logger.LogInformation($"Episode downloaded, querying fingerprint service");
+
+            var p2 = new PerfLogger(this.logger, "FPQuery");
             var queryResult = await this.fpService.Query(file, podcast);
-            this.logger.LogInformation($"Found cuts: {string.Join(",", queryResult.Select(x => $"{x.Start}-{x.End}"))}");
-            string finalFile = await this.splicerService.Cut(file, queryResult.Select(x => new SplicerService.CutOut(x.Start, x.End)).ToArray());
+            p2.Dispose();
 
+            this.logger.LogInformation($"Found cuts: {string.Join(",", queryResult.Select(x => $"{x.Start}-{x.End}"))}");
+            var p3 = new PerfLogger(this.logger, "SplicerCut");
+            string finalFile = await this.splicerService.Cut(file, queryResult.Select(x => new SplicerService.CutOut(x.Start, x.End)).ToArray());
+            p3.Dispose();
 
             return this.PhysicalFile(finalFile, "application/octet-stream", fileName);
         }

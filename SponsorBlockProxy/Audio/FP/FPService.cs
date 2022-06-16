@@ -23,7 +23,6 @@ namespace SponsorBlockProxy.Audio.FP
     public class FPService
     {
         public FPService(ILogger<FPService> logger,
-            ILoggerFactory logFactory,
             AppSettingsConfig config)
         {
             this.logger = logger;
@@ -112,26 +111,6 @@ namespace SponsorBlockProxy.Audio.FP
             }
 
             var pairs = new List<ResultModel>();
-            (ResultEntry, int) GetEnd(List<ResultEntry> q, int startIndex, ResultEntry start, SkipPair skip)
-            {
-                for (int i = startIndex; i < q.Count; i++)
-                {
-                    var r = q[i];
-
-                    var endSkip = r.GetSkipPair();
-                    if (endSkip != skip.Id) continue;
-
-                    if (r.GetStartEnd() != StartEndEnum.End) continue;
-
-                    if (r.QueryMatchStartsAt - start.QueryMatchStartsAt < skip.MinTimeSeconds) continue;
-                    if (r.QueryMatchStartsAt - start.QueryMatchStartsAt > skip.MaxTimeSeconds) break;
-
-                    return (r, i);
-                }
-
-                return (null, -1);
-            }
-
             ResultEntry start;
             for (int currentIndex = 0; currentIndex < working.Count; currentIndex++)
             {
@@ -147,6 +126,26 @@ namespace SponsorBlockProxy.Audio.FP
             }
 
             return pairs;
+        }
+
+        (ResultEntry entry, int index) GetEnd(List<ResultEntry> list, int startIndex, ResultEntry start, SkipPair skip)
+        {
+            for (int i = startIndex; i < list.Count; i++)
+            {
+                var r = list[i];
+
+                var endSkip = r.GetSkipPair();
+                if (endSkip != skip.Id) continue;
+
+                if (r.GetStartEnd() != StartEndEnum.End) continue;
+
+                if (r.QueryMatchStartsAt - start.QueryMatchStartsAt < skip.MinTimeSeconds) continue;
+                if (r.QueryMatchStartsAt - start.QueryMatchStartsAt > skip.MaxTimeSeconds) break;
+
+                return (r, i);
+            }
+
+            return (null, -1);
         }
 
 
