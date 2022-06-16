@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-
+using SponsorBlockProxy.Models;
 using Microsoft.Extensions.Options;
 
 using FFmpegEx = Xabe.FFmpeg.FFmpeg;
@@ -28,49 +30,54 @@ namespace SponsorBlockProxy.Audio.Splice
 
         private readonly string WorkDir;
 
-        public async Task<string> Cut(string inputFile, CutOut cut, bool deleteInputfile = true)
+        public async Task<string> Cut(string inputFile, CutOut[] cuts, bool deleteInputfile = true)
         {
             var mediaInfo = await FFmpegEx.GetMediaInfo(inputFile);
 
+            var keeps = new List<Keep>();
+            TimeSpan start = TimeSpan.Zero;
+            foreach (var cut in cuts)
+            {
+                keeps.Add(new Keep { Start = start, Stop = cut.Start });
+                start = cut.Stop;
+            }
+            keeps.Add(new Keep { Start = start, Stop = mediaInfo.Duration });
 
-            string section1Output = GetUniqueFile(this.WorkDir);
-            var split1 = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, section1Output, TimeSpan.Zero, cut.Start);
-            split1.UseMultiThread(true);
-            var split1Task = split1.Start();
 
+            foreach (var keep in keeps)
+            {
+                string sectionOutput = GetUniqueFile(this.WorkDir);
+                var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, sectionOutput, keep.Start, keep.Stop);
+                splitJob.UseMultiThread(true);
+                var splitTask = splitJob.Start();
+                keep.File = sectionOutput;
+                keep.CutTask = splitTask;
+            }
 
-            string section2Output = GetUniqueFile(this.WorkDir);
-            var split2 = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, section2Output, cut.Stop, mediaInfo.Duration);
-            split2.UseMultiThread(true);
-            var split2Task = split2.Start();
-
-            await Task.WhenAll(split1Task, split2Task);
+            await Task.WhenAll(keeps.Select(x => x.CutTask));
 
             string fullOutput = GetUniqueFile(this.WorkDir);
 
-            var concat = await Extensions.ConcatenateAudio(fullOutput, section1Output, section2Output);
+            var concat = Extensions.ConcatenateAudio(fullOutput, keeps.Select(x => x.File).ToArray());
             concat.UseMultiThread(true);
             await concat.Start();
 
 
             if (deleteInputfile) File.Delete(inputFile);
-            File.Delete(section1Output);
-            File.Delete(section2Output);
+            foreach (var keep in keeps)
+            {
+                File.Delete(keep.File);
+            }
 
             return fullOutput;
         }
 
-        public async Task<Stream> Cut(Stream stream, CutOut cut)
+        class Keep
         {
-            string inputFile = GetUniqueFile(this.WorkDir);
-            using (var fs = File.OpenWrite(inputFile))
-            {
-                await stream.CopyToAsync(fs);
-            }
-
-            var outputfile = await Cut(inputFile, cut);
-
-            return File.OpenRead(outputfile);
+            public TimeSpan Start { get; set; }
+            public TimeSpan Stop { get; set; }
+            public Task CutTask { get; set; }
+            public string File { get; set; }
         }
 
         public void Dispose()
@@ -94,11 +101,6 @@ namespace SponsorBlockProxy.Audio.Splice
         }
 
 
-
-        public class CutOut
-        {
-            public TimeSpan Start { get; set; }
-            public TimeSpan Stop { get; set; }
-        }
+        public record CutOut(TimeSpan Start, TimeSpan Stop);
     }
 }

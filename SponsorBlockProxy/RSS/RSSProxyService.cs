@@ -9,29 +9,27 @@ using System.Xml;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.IO;
+using SponsorBlockProxy.Models;
 
 namespace SponsorBlockProxy.RSS
 {
     public class RSSProxyService
     {
         private readonly ILogger<RSSProxyService> logger;
-        private readonly IOptions<AppSettingsConfig> config;
+        private readonly AppSettingsConfig config;
 
-        public RSSProxyService(ILogger<RSSProxyService> logger, IOptions<AppSettingsConfig> config)
+        public RSSProxyService(ILogger<RSSProxyService> logger, AppSettingsConfig config)
         {
             this.logger = logger;
             this.config = config;
+            this.Podcasts = config.Podcasts.ToDictionary(k => k.Name, StringComparer.OrdinalIgnoreCase);
         }
 
-        public Dictionary<string, PodcastInfo> Podcasts = new Dictionary<string, PodcastInfo>(StringComparer.OrdinalIgnoreCase) {
-            { "LinuxUnplugged", new PodcastInfo { Name = "Linux Unplugged", RSSUrl = new Uri(@"https://feeds.fireside.fm/linuxunplugged/rss") } },
-            { "JupiterExtras", new PodcastInfo { Name = "Jupiter EXTRAS", RSSUrl = new Uri(@"https://feeds.fireside.fm/extras/rss") } },
-            { "LinuxActionNews", new PodcastInfo { Name = "Linux Action News", RSSUrl = new Uri(@"https://feeds.fireside.fm/linuxactionnews/rss") } },
-            { "SelfHosted", new PodcastInfo { Name = "SelfHosted", RSSUrl = new Uri(@"https://feeds.fireside.fm/selfhosted/rss") } },
-        };
+        public Dictionary<string, PodcastInfo> Podcasts { get; set; }
 
         public RSSFeedWrapper GetFeed(string podcast)
         {
+            this.logger.LogInformation($"Getting feed for {podcast}");
             var info = this.Podcasts.GetValueOrDefault(podcast);
             if (info is null)
             {
@@ -48,14 +46,13 @@ namespace SponsorBlockProxy.RSS
                 {
                     if (link.RelationshipType == "enclosure" && link.MediaType == "audio/mp3")
                     {
-                        link.Uri = new Uri(new Uri(this.config.Value.BaseUrl), $"download/{podcast}/{guid}");
+                        link.Uri = new Uri(new Uri(this.config.BaseUrl), $"RSS/download/{podcast}/{guid}");
                     }
                 }
             }
 
             var wrapper = new RSSFeedWrapper(feed);
             return wrapper;
-
         }
 
         public async Task<(string filename, Stream stream)> Download(string podcast, string episodeId)

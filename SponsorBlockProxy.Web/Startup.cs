@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using SponsorBlockProxy.Audio.FP;
 using SponsorBlockProxy.Audio.Splice;
 using SponsorBlockProxy.RSS;
+using SponsorBlockProxy.Models;
 
 namespace SponsorBlockProxy.Web
 {
@@ -26,13 +27,16 @@ namespace SponsorBlockProxy.Web
             services.AddTransient<RSSProxyService>();
             services.AddSingleton<FPService>();
             services.AddSingleton<SplicerService>();
+            
+            var section = Configuration.GetSection("AppSettings");
+            var config = section.Get<AppSettingsConfig>();
+            services.AddSingleton(config);
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "test", Version = "v1" });
             });
-            services.Configure<AppSettingsConfig>(Configuration.GetSection("AppSettings"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,11 +49,11 @@ namespace SponsorBlockProxy.Web
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "test v1"));
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
