@@ -6,7 +6,7 @@ namespace SponsorBlockProxy;
 
 public class PerfLogger : IDisposable
 {
-    public PerfLogger(ILogger logger, string name)
+    public PerfLogger(ILoggy logger, string name)
     {
         this.Name = name;
         this.Logger = logger;
@@ -15,7 +15,7 @@ public class PerfLogger : IDisposable
     }
 
     public string Name { get; }
-    public ILogger Logger { get; }
+    public ILoggy Logger { get; }
     public Stopwatch SW { get; }
 
     public void Dispose()
