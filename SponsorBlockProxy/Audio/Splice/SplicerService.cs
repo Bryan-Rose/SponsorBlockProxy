@@ -54,7 +54,8 @@ namespace SponsorBlockProxy.Audio.Splice
             foreach (var keep in keeps)
             {
                 string sectionOutput = GetUniqueFile(this.WorkDir);
-                var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, sectionOutput, keep.Start, keep.Stop);
+                var duration = keep.Stop - keep.Start;
+                var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, sectionOutput, keep.Start, duration);
                 splitJob.UseMultiThread(true);
                 this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
                 var splitTask = splitJob.Start();
