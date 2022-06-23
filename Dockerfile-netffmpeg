@@ -1,4 +1,4 @@
 # syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 
-RUN apt update && apt upgrade -y && apt install -y ffmpeg
+RUN apt update && apt upgrade -y && apt install -y ffmpeg mp3splt

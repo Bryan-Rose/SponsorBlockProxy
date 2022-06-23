@@ -75,10 +75,19 @@ namespace SponsorBlockProxy.Web.Controllers
             var queryResult = await this.fpService.Query(file, podcast);
             p2.Dispose();
 
-            this.logger.LogInformation($"Found cuts: {string.Join(",", queryResult.Select(x => $"{x.Start}-{x.End}"))}");
-            var p3 = new PerfLogger(this.logger, "SplicerCut");
-            string finalFile = await this.splicerService.Cut(file, queryResult.Select(x => new SplicerService.CutOut(x.Start, x.End)).ToArray());
-            p3.Dispose();
+            string finalFile;
+            if (queryResult.Count > 0)
+            {
+                this.logger.LogInformation($"Found cuts: {string.Join(",", queryResult.Select(x => $"{x.Start}-{x.End}"))}");
+                var p3 = new PerfLogger(this.logger, "SplicerCut");
+                finalFile = await this.splicerService.Cut(file, queryResult.Select(x => new SplicerService.CutOut(x.Start, x.End)).ToArray());
+                p3.Dispose();
+            }
+            else
+            {
+                this.logger.LogInformation($"No cuts found, returning original file");
+                finalFile = file;
+            }
 
             return this.PhysicalFile(finalFile, "application/octet-stream", fileName);
         }
