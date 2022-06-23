@@ -36,11 +36,11 @@ public class Mp3SpltCutter : ICutter
 
     public async Task<string> Cut(string inputFile, string workDir, TimeSpan start, TimeSpan stop)
     {
-        var outputFile = Extensions.GetUniqueFile(workDir, "");
+        var outputFile = Extensions.GetUniqueFile(workDir, null);
         var outputFileName = Path.GetFileName(outputFile);
         var argsList = new List<string>() {
             "-f", // Process all frames
-            //"-Q", // Quiet
+            "-Q", // Quiet
             $"-d \"{workDir}\"",
             $"-o \"{outputFileName}\"",
             $"\"{inputFile}\"",

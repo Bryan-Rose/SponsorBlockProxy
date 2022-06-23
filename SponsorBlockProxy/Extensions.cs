@@ -41,7 +41,8 @@ namespace SponsorBlockProxy
         {
             for (int i = 0; i < 10; i++)
             {
-                string fileName = Path.GetRandomFileName() + extension;
+                string fileName = Path.GetRandomFileName();
+                fileName = Path.ChangeExtension(fileName, extension);
                 var full = Path.Combine(path, fileName);
                 if (!File.Exists(full))
                 {
