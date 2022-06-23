@@ -45,13 +45,12 @@ namespace SponsorBlockProxy.Audio.Splice
             var p1 = new PerfLogger(this.Logger, "Splits");
             foreach (var keep in keeps)
             {
-                string sectionOutput = GetUniqueFile(this.WorkDir);
-                keep.File = sectionOutput;
                 this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
-                var splitTask = this.Cutter.Cut(inputFile, sectionOutput, keep.Start, keep.Stop)
+                var splitTask = this.Cutter.Cut(inputFile, this.WorkDir, keep.Start, keep.Stop)
                     .ContinueWith(t =>
                     {
-                        this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop}");
+                        keep.File = t.Result;
+                        this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop} - {t.Result}");
                     });
                 keep.CutTask = splitTask;
             }
@@ -60,7 +59,7 @@ namespace SponsorBlockProxy.Audio.Splice
             p1.Dispose();
 
 
-            string fullOutput = GetUniqueFile(this.WorkDir);
+            string fullOutput = Extensions.GetUniqueFile(this.WorkDir);
 
             var concat = Extensions.ConcatenateAudio(fullOutput, keeps.Select(x => x.File).ToArray());
             concat.UseMultiThread(true);
@@ -78,29 +77,11 @@ namespace SponsorBlockProxy.Audio.Splice
             return fullOutput;
         }
 
-
-
         public void Dispose()
         {
             Directory.Delete(this.WorkDir, recursive: true);
         }
-
-        private static string GetUniqueFile(string path, string extension = ".mp3")
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                string fileName = Path.GetRandomFileName() + extension;
-                var full = Path.Combine(path, fileName);
-                if (!File.Exists(full))
-                {
-                    return full;
-                }
-            }
-
-            throw new Exception();
-        }
-
-
+     
         public record CutOut(TimeSpan Start, TimeSpan Stop);
     }
 }

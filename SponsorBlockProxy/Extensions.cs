@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using SoundFingerprinting.Query;
@@ -35,7 +36,21 @@ namespace SponsorBlockProxy
                 act(t);
             }
         }
+        
+        public static string GetUniqueFile(string path, string extension = ".mp3")
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                string fileName = Path.GetRandomFileName() + extension;
+                var full = Path.Combine(path, fileName);
+                if (!File.Exists(full))
+                {
+                    return full;
+                }
+            }
 
+            throw new Exception("Could not find a unique file");
+        }
 
         public static IConversion ConcatenateAudio(string output, params string[] inputAudio)
         {
