@@ -12,6 +12,7 @@ namespace SponsorBlockProxy.Models
         public PodcastInfo[] Podcasts { get; set; } = new PodcastInfo[0];
 
         public MediaToolEnum MediaTool { get; set; }
+        public string MediaToolPath { get; set; }
 
 
         public enum MediaToolEnum

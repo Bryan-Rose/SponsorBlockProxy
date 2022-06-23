@@ -13,47 +13,20 @@ namespace SponsorBlockProxy.Audio.Splice
     public class SplicerService : IDisposable
     {
         public SplicerService(Loggy<SplicerService> logger,
-            AppSettingsConfig config)
+            AppSettingsConfig config,
+            ICutter cutter)
         {
             this.Logger = logger;
             this.Config = config;
+            this.Cutter = cutter;
             this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockProxy");
             Directory.CreateDirectory(this.WorkDir);
-
-            
-
-            // if (AppSettingsConfig.OperatingSystem.IsWindows)
-            // {
-            //     FFmpegEx.SetExecutablesPath(@"FFmpeg\bin\x64");
-            // }
-            // else if (AppSettingsConfig.OperatingSystem.IsLinux)
-            // {
-
-            //     FFmpegEx.SetExecutablesPath("/usr/lib/x86_64-linux-gnu/");
-            // }
         }
 
         public Loggy<SplicerService> Logger { get; }
         public AppSettingsConfig Config { get; }
+        public ICutter Cutter { get; }
         public string WorkDir { get; }
-
-        private async Task Cut_ffmpeg(string inputFile, string outputFile, Keep keep)
-        {
-            //FFmpegEx.SetExecutablesPath(Config.ffmpegDirectrory);
-
-            var duration = (keep.Stop - keep.Start);
-            var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, outputFile, keep.Start, duration);
-            splitJob.UseMultiThread(true);
-            this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
-            var splitTask = splitJob.Start().ContinueWith(t =>
-            {
-                this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop}");
-            });
-
-            await splitTask;
-            // keep.File = outputFile;
-            // keep.CutTask = splitTask;
-        }
 
         public async Task<string> Cut(string inputFile, CutOut[] cuts, bool deleteInputfile = true)
         {
@@ -73,16 +46,14 @@ namespace SponsorBlockProxy.Audio.Splice
             foreach (var keep in keeps)
             {
                 string sectionOutput = GetUniqueFile(this.WorkDir);
-                var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, sectionOutput, keep.Start, keep.Stop);
-                splitJob.UseMultiThread(true);
-                this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
-                var splitTask = splitJob.Start();
                 keep.File = sectionOutput;
+                this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
+                var splitTask = this.Cutter.Cut(inputFile, sectionOutput, keep.Start, keep.Stop)
+                    .ContinueWith(t =>
+                    {
+                        this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop}");
+                    });
                 keep.CutTask = splitTask;
-                splitTask.ContinueWith(t =>
-                {
-                    this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop}");
-                });
             }
 
             await Task.WhenAll(keeps.Select(x => x.CutTask));
@@ -107,13 +78,7 @@ namespace SponsorBlockProxy.Audio.Splice
             return fullOutput;
         }
 
-        class Keep
-        {
-            public TimeSpan Start { get; set; }
-            public TimeSpan Stop { get; set; }
-            public Task CutTask { get; set; }
-            public string File { get; set; }
-        }
+
 
         public void Dispose()
         {

@@ -24,14 +24,23 @@ namespace SponsorBlockProxy.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient(typeof(Loggy<>));
             services.AddTransient<RSSProxyService>();
             services.AddSingleton<FPService>();
             services.AddSingleton<SplicerService>();
-            services.AddTransient(typeof(Loggy<>));
-            
+
             var section = Configuration.GetSection("AppSettings");
             var config = section.Get<AppSettingsConfig>();
             services.AddSingleton(config);
+
+            if (config.MediaTool == AppSettingsConfig.MediaToolEnum.FFMPEG)
+            {
+                services.AddSingleton<ICutter, FFmpegCutter>();
+            }
+            else if (config.MediaTool == AppSettingsConfig.MediaToolEnum.MP3SPLT)
+            {
+                services.AddSingleton<ICutter, Mp3SpltCutter>();
+            }
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
