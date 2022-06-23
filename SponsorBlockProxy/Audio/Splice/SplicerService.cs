@@ -16,11 +16,11 @@ namespace SponsorBlockProxy.Audio.Splice
             AppSettingsConfig config)
         {
             this.Logger = logger;
+            this.Config = config;
             this.WorkDir = Path.Combine(Path.GetTempPath(), "SponsorBlockProxy");
             Directory.CreateDirectory(this.WorkDir);
 
-
-            FFmpegEx.SetExecutablesPath(config.ffmpegDirectrory);
+            
 
             // if (AppSettingsConfig.OperatingSystem.IsWindows)
             // {
@@ -34,7 +34,26 @@ namespace SponsorBlockProxy.Audio.Splice
         }
 
         public Loggy<SplicerService> Logger { get; }
-        private readonly string WorkDir;
+        public AppSettingsConfig Config { get; }
+        public string WorkDir { get; }
+
+        private async Task Cut_ffmpeg(string inputFile, string outputFile, Keep keep)
+        {
+            //FFmpegEx.SetExecutablesPath(Config.ffmpegDirectrory);
+
+            var duration = (keep.Stop - keep.Start);
+            var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, outputFile, keep.Start, duration);
+            splitJob.UseMultiThread(true);
+            this.Logger.LogInformation($"Starting split {keep.Start}-{keep.Stop}");
+            var splitTask = splitJob.Start().ContinueWith(t =>
+            {
+                this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop}");
+            });
+
+            await splitTask;
+            // keep.File = outputFile;
+            // keep.CutTask = splitTask;
+        }
 
         public async Task<string> Cut(string inputFile, CutOut[] cuts, bool deleteInputfile = true)
         {
@@ -60,6 +79,10 @@ namespace SponsorBlockProxy.Audio.Splice
                 var splitTask = splitJob.Start();
                 keep.File = sectionOutput;
                 keep.CutTask = splitTask;
+                splitTask.ContinueWith(t =>
+                {
+                    this.Logger.LogInformation($"Split completed {keep.Start}-{keep.Stop}");
+                });
             }
 
             await Task.WhenAll(keeps.Select(x => x.CutTask));
