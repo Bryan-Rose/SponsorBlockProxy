@@ -9,7 +9,7 @@ namespace SponsorBlockProxy.Audio.Splice;
 
 public class Mp3SpltCutter : ICutter
 {
-    public Mp3SpltCutter(AppSettingsConfig config, Loggy<FFmpegCutter> logger)
+    public Mp3SpltCutter(AppSettingsConfig config, Loggy<Mp3SpltCutter> logger)
     {
         this.Config = config;
         this.Logger = logger;
@@ -17,7 +17,7 @@ public class Mp3SpltCutter : ICutter
     }
 
     public AppSettingsConfig Config { get; }
-    public Loggy<FFmpegCutter> Logger { get; }
+    public Loggy<Mp3SpltCutter> Logger { get; }
 
     public const string BinName = "mp3splt";
 
