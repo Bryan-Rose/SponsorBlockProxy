@@ -5,5 +5,5 @@ namespace SponsorBlockProxy.Audio.Splice;
 
 public interface ICutter
 {
-    Task Cut(string inputFile, string outputFile, TimeSpan start, TimeSpan stop);
+    Task<string> Cut(string inputFile, string workDir, TimeSpan start, TimeSpan stop);
 }

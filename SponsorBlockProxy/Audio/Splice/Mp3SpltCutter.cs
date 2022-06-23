@@ -34,21 +34,18 @@ public class Mp3SpltCutter : ICutter
     }
 
 
-    public async Task Cut(string inputFile, string outputFile, TimeSpan start, TimeSpan stop)
+    public async Task<string> Cut(string inputFile, string workDir, TimeSpan start, TimeSpan stop)
     {
-        var startMinutes = (int)start.TotalMinutes;
-        var startSeconds = start.Seconds;
-
-        var stopMinutes = (int)stop.TotalMinutes;
-        var stopSeconds = stop.Seconds;
-        
+        var outputFile = Extensions.GetUniqueFile(workDir, "");
+        var outputFileName = Path.GetFileName(outputFile);
         var argsList = new List<string>() {
             "-f", // Process all frames
-            "-Q", // Quiet
-            $"-o \"{outputFile}\"",
+            //"-Q", // Quiet
+            $"-d \"{workDir}\"",
+            $"-o \"{outputFileName}\"",
             $"\"{inputFile}\"",
-            $"{startMinutes}.{startSeconds}",
-            $"{stopMinutes}.{stopSeconds}",
+            $"{(int)start.TotalMinutes}.{start.Seconds}",
+            $"{(int)stop.TotalMinutes}.{stop.Seconds}",
         };
         var argsStr = String.Join(" ", argsList);
 
@@ -64,5 +61,7 @@ public class Mp3SpltCutter : ICutter
 
         var process = Process.Start(startInfo);
         await process.WaitForExitAsync();
+
+        return Path.ChangeExtension(outputFile, "mp3");
     }
 }

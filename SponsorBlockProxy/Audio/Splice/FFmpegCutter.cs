@@ -17,13 +17,16 @@ public class FFmpegCutter : ICutter
     public AppSettingsConfig Config { get; }
     public Loggy<FFmpegCutter> Logger { get; }
 
-    public async Task Cut(string inputFile, string outputFile, TimeSpan start, TimeSpan stop)
+    public async Task<string> Cut(string inputFile, string workDir, TimeSpan start, TimeSpan stop)
     {
         var duration = (stop - start);
+        var outputFile = Extensions.GetUniqueFile(workDir);
         var splitJob = await FFmpegEx.Conversions.FromSnippet.Split(inputFile, outputFile, start, duration);
         splitJob.UseMultiThread(true);
         var splitTask = splitJob.Start();
 
         await splitTask;
+        
+        return outputFile;
     }
 }
