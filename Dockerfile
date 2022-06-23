@@ -1,9 +1,8 @@
 # syntax=docker/dockerfile:1
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-COPY SponsorBlockProxy.Web/bin/Debug/net6.0/publish/ App/
+#FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM localhost/aspnetffmpeg
 
-#RUN apt update && apt upgrade -y && apt install -y ffmpeg
-RUN apt update && apt install -y ffmpeg
+COPY SponsorBlockProxy.Web/bin/Debug/net6.0/publish/ App/
 
 ENV SBP_CONFIG_DIR="/config"
 
